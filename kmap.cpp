@@ -1,9 +1,13 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+
+#define KMAP_SIZE 16
+#define MASK16SIZE 16
+#define MASK8SIZE 8
+#define MASK4SIZE 4
+#define MASK2SIZE 2
 
 using namespace std;
 
@@ -16,7 +20,7 @@ char **str_split(char *str, char delim, int *numSplits)
     if ((str == NULL) ||
         (delim == '\0'))
     {
-        // Either of those will cause problems
+        /* Either of those will cause problems */
         ret = NULL;
         retLen = -1;
     }
@@ -25,7 +29,7 @@ char **str_split(char *str, char delim, int *numSplits)
         retLen = 0;
         c = str;
 
-        // Pre-calculate number of elements
+        /* Pre-calculate number of elements */
         do
         {
             if (*c == delim)
@@ -63,236 +67,531 @@ char **str_split(char *str, char delim, int *numSplits)
     return ret;
 }
 
-/*void find_max_rectangle(int i, int j, int map[4][4], int count[4][4])
-{
-    int length = 0; //only 2^k
-    int width = 0;
-    int max_area = 0;
-    //set width
-    if (i == 0)
-    {
-        if (map[1][j] == 1 && map[2][j] == 1 && map[3][j] == 1)
-        {
-            if (j == 0)
-            {
-                bool stop = true;
-                for (int k = 0; k < 4; k++)
-                    for (int m = 0; m < 4; m++)
-                        if (map[k][m] == 0)
-                            stop = false;
-                if (stop)
-                {
-                    max_area = 16;
-                    
-                }
-                stop = true;
-                for (int m = 0; m < 4; m++)
-                    if (map[m][1] == 0)
-                        stop = false;
-                if (stop)
-            }
-            else if (j == 1)
-            {
-            }
-            else if (j == 2)
-            {
-            }
-            else if (j == 3)
-            {
-            }
-        }
-        else if (map[1][j] == 1)
-        {
-        }
-        else if (map[3][j] == 1)
-        {
-        }
-    }
-}*/
+int *stat = (int*) calloc(KMAP_SIZE, sizeof(int));
 
-int dec2bin(int i) {
-	int bin = 0;
-	for (int j = 0; j < 3; ++j) { 
-		int rmd = i % 2;
-		bin += rmd * pow(10, j);
-		i /= 2;	
+void cal_stat(int check_code) {
+	for (int k = 0; k < KMAP_SIZE; k++) {
+		if (check_code & 1 == 1)
+			++stat[k];
+		check_code >>= 1;
 	}
-	bin += i * pow(10, 3);
-	return bin;
 }
 
-int t2o(int a, int b){
-	int tn = 0;
-	a = dec2bin(a); b = dec2bin(b);
-	for (int i = 0; i < 4; ++i) {
-		if (a % 10 != b % 10) tn += 2*pow(10,i);
-		else tn += a % 10 * pow(10,i);
-		a /= 10; b /= 10;
-	}
-	return tn;
+struct ListNode {
+    int check_code;
+    struct ListNode *next;
+};
+
+struct ListNode *temp_node = (struct ListNode*) malloc(sizeof(struct ListNode));
+
+bool covered_node_check(struct ListNode *og_node, int check_code) {
+	struct ListNode *current_node = og_node;
+    do {
+    	if (current_node->check_code && (check_code & current_node->check_code) == check_code)
+			return true;
+        current_node = current_node->next;
+    } while(current_node != NULL);
+    return false;
 }
 
-int v2(int a, int b) {
-	int ct0 = 0, tn = 0;
-	for (int i = 0; i < 4; ++i) {
-		if (a % 10 == b % 10) ++ct0;
-		if ((a % 10 == 0 && b % 10 == 2) || (a % 10 == 2 && b % 10 == 0)) tn += 3*pow(10,i);
-		else if (a % 10 != b % 10) tn += 2*pow(10,i);
-		else tn += a % 10 * pow(10,i);
-		a /= 10; b /= 10;
-	}
-	if (ct0 == 3) return tn;
-	else return 3;
+void add_node(int covered_check_code) {
+	temp_node->next = (struct ListNode*) malloc(sizeof(struct ListNode));
+	temp_node = temp_node->next;
+	temp_node->check_code = covered_check_code;
+	temp_node->next = NULL;
 }
 
-void op2(int x1, int x2) {
-	int act = 0, bct = 0, cct = 0, dct = 0;
-	switch (x1) {
-		case 0: --act; --bct; --cct; --dct; break;
-		case 1: --act; --bct; --cct; ++dct; break;
-		case 2: --act; --bct; ++cct; --dct; break;
-		case 3: --act; --bct; ++cct; ++dct; break;
-		case 4: --act; ++bct; --cct; --dct; break;
-		case 5: --act; ++bct; --cct; ++dct; break;
-		case 6: --act; ++bct; ++cct; --dct; break;
-		case 7: --act; ++bct; ++cct; ++dct; break;
-		case 8: ++act; --bct; --cct; --dct; break;
-		case 9: ++act; --bct; --cct; ++dct; break;
-		case 10: ++act; --bct; ++cct; --dct; break;
-		case 11: ++act; --bct; ++cct; ++dct; break;
-		case 12: ++act; ++bct; --cct; --dct; break;
-		case 13: ++act; ++bct; --cct; ++dct; break;
-		case 14: ++act; ++bct; ++cct; --dct; break;
-		case 15: ++act; ++bct; ++cct; ++dct; break;
-		default: break;
-	}
-	switch (x2) {
-		case 0: --act; --bct; --cct; --dct; break;
-		case 1: --act; --bct; --cct; ++dct; break;
-		case 2: --act; --bct; ++cct; --dct; break;
-		case 3: --act; --bct; ++cct; ++dct; break;
-		case 4: --act; ++bct; --cct; --dct; break;
-		case 5: --act; ++bct; --cct; ++dct; break;
-		case 6: --act; ++bct; ++cct; --dct; break;
-		case 7: --act; ++bct; ++cct; ++dct; break;
-		case 8: ++act; --bct; --cct; --dct; break;
-		case 9: ++act; --bct; --cct; ++dct; break;
-		case 10: ++act; --bct; ++cct; --dct; break;
-		case 11: ++act; --bct; ++cct; ++dct; break;
-		case 12: ++act; ++bct; --cct; --dct; break;
-		case 13: ++act; ++bct; --cct; ++dct; break;
-		case 14: ++act; ++bct; ++cct; --dct; break;
-		case 15: ++act; ++bct; ++cct; ++dct; break;
-		default: break;
-	}
-	if (x1 == 0) printf("simplification of group 0 -> ");
-	else if (x1 == 1 || x1 == 2 || x1 == 8) printf("simplification of group 1 -> ");
-	else if (x1 == 7 || x1 == 11 || x1 == 13 || x1 == 14) printf("simplification of group 3 -> ");
-	else if (x1 == 15) printf("simplification of group 4 -> ");
-	else printf("simplification of group 2 -> ");
-	if (act == 2) printf("a");
-	else if (act == -2) printf("a'");
-	if (bct == 2) printf("b");
-	else if (bct == -2) printf("b'");
-	if (cct == 2) printf("c");
-	else if (cct == -2) printf("c'");
-	if (dct == 2) printf("d");
-	else if (dct == -2) printf("d'");
-	printf("\n");
+bool is_prime_implcnt(int check_code, int target_num) {
+	check_code >>= target_num;
+	if (check_code & 1)
+		return true;
+	return false;
 }
 
-void op4(int x1, int x2, int x3, int x4) {
-	int act = 0, bct = 0, cct = 0, dct = 0;
-	switch (x1) {
-		case 0: --act; --bct; --cct; --dct; break;
-		case 1: --act; --bct; --cct; ++dct; break;
-		case 2: --act; --bct; ++cct; --dct; break;
-		case 3: --act; --bct; ++cct; ++dct; break;
-		case 4: --act; ++bct; --cct; --dct; break;
-		case 5: --act; ++bct; --cct; ++dct; break;
-		case 6: --act; ++bct; ++cct; --dct; break;
-		case 7: --act; ++bct; ++cct; ++dct; break;
-		case 8: ++act; --bct; --cct; --dct; break;
-		case 9: ++act; --bct; --cct; ++dct; break;
-		case 10: ++act; --bct; ++cct; --dct; break;
-		case 11: ++act; --bct; ++cct; ++dct; break;
-		case 12: ++act; ++bct; --cct; --dct; break;
-		case 13: ++act; ++bct; --cct; ++dct; break;
-		case 14: ++act; ++bct; ++cct; --dct; break;
-		case 15: ++act; ++bct; ++cct; ++dct; break;
-		default: break;
+int cal_covered_size(int check_code) {
+	int ct = 0;
+	for (int k = 0; k < KMAP_SIZE; k++) {
+		if (stat[k] && (check_code & 1))
+			ct++;
+		check_code >>= 1;
 	}
-	switch (x2) {
-		case 0: --act; --bct; --cct; --dct; break;
-		case 1: --act; --bct; --cct; ++dct; break;
-		case 2: --act; --bct; ++cct; --dct; break;
-		case 3: --act; --bct; ++cct; ++dct; break;
-		case 4: --act; ++bct; --cct; --dct; break;
-		case 5: --act; ++bct; --cct; ++dct; break;
-		case 6: --act; ++bct; ++cct; --dct; break;
-		case 7: --act; ++bct; ++cct; ++dct; break;
-		case 8: ++act; --bct; --cct; --dct; break;
-		case 9: ++act; --bct; --cct; ++dct; break;
-		case 10: ++act; --bct; ++cct; --dct; break;
-		case 11: ++act; --bct; ++cct; ++dct; break;
-		case 12: ++act; ++bct; --cct; --dct; break;
-		case 13: ++act; ++bct; --cct; ++dct; break;
-		case 14: ++act; ++bct; ++cct; --dct; break;
-		case 15: ++act; ++bct; ++cct; ++dct; break;
-		default: break;
+	return ct;
+}
+
+int traverse_node(struct ListNode *og_node, int target_num) {
+	int covered_size_max = 0;
+	int res_check_code = 0;
+	temp_node = og_node;
+    do {
+    	if (temp_node->check_code && is_prime_implcnt(temp_node->check_code, target_num)
+		    && covered_size_max < cal_covered_size(temp_node->check_code)) {
+		    	covered_size_max = cal_covered_size(temp_node->check_code);
+		    	res_check_code = temp_node->check_code;
+			}
+        temp_node = temp_node->next;
+    } while(temp_node != NULL);
+    return res_check_code;
+}
+
+void clear_stat(int check_code) {
+	for (int k = 0; k < KMAP_SIZE; k++) {
+		if (check_code & 1)
+			stat[k] = 0;
+		check_code >>= 1;
 	}
-	switch (x3) {
-		case 0: --act; --bct; --cct; --dct; break;
-		case 1: --act; --bct; --cct; ++dct; break;
-		case 2: --act; --bct; ++cct; --dct; break;
-		case 3: --act; --bct; ++cct; ++dct; break;
-		case 4: --act; ++bct; --cct; --dct; break;
-		case 5: --act; ++bct; --cct; ++dct; break;
-		case 6: --act; ++bct; ++cct; --dct; break;
-		case 7: --act; ++bct; ++cct; ++dct; break;
-		case 8: ++act; --bct; --cct; --dct; break;
-		case 9: ++act; --bct; --cct; ++dct; break;
-		case 10: ++act; --bct; ++cct; --dct; break;
-		case 11: ++act; --bct; ++cct; ++dct; break;
-		case 12: ++act; ++bct; --cct; --dct; break;
-		case 13: ++act; ++bct; --cct; ++dct; break;
-		case 14: ++act; ++bct; ++cct; --dct; break;
-		case 15: ++act; ++bct; ++cct; ++dct; break;
-		default: break;
+}
+
+bool find_min_SOP_over(int *stat) {
+	int sum = 0;
+	for (int k = 0; k < KMAP_SIZE; k++)
+		sum += stat[k];
+	if (sum)
+		return false;
+	return true;
+}
+
+void print_min_SOP(int check_code) {
+	cout << "[";
+	for (int k = 0; k < KMAP_SIZE; k++)
+		if ((check_code >> k) & 1) 
+			cout << k << ", ";
+	cout << "\b\b" << "]" << endl; 
+}
+
+int *seq = (int*) malloc(sizeof(int) * 16);
+
+typedef struct {
+	bool is_covered;
+	int check_code;
+    int ones_array[16];
+} Mask16;
+
+Mask16 mask_4_x_4 = {
+	.is_covered = 1,
+	.check_code = 0b1111111111111111,
+	.ones_array = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+};
+
+typedef struct {
+	bool is_covered;
+	int check_code;
+    int ones_array[8];
+} Mask8;
+
+Mask8 mask_2_x_4[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0101010101010101,
+	  .ones_array = {2, 6, 14, 10, 0, 4, 12, 8} },
+	{ .is_covered = 1,
+	  .check_code = 0b0011001100110011,
+	  .ones_array = {0, 4, 12, 8, 1, 5, 13, 9} },
+	{ .is_covered = 1,
+	  .check_code = 0b1010101010101010,
+	  .ones_array = {1, 5, 13, 9, 3, 7, 15, 11} },
+	{ .is_covered = 1,
+	  .check_code = 0b1100110011001100,
+	  .ones_array = {3, 7, 15, 11, 2, 6, 14, 10} }
+};
+
+Mask8 mask_4_x_2[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0000111100001111,
+	  .ones_array = {8, 9, 11, 10, 0, 1, 3, 2} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000011111111,
+	  .ones_array = {0, 1, 3, 2, 4, 5, 7, 6} },
+	{ .is_covered = 1,
+	  .check_code = 0b1111000011110000,
+	  .ones_array = {4, 5, 7, 6, 12, 13, 15, 14} },
+	{ .is_covered = 1,
+	  .check_code = 0b1111111100000000,
+	  .ones_array = {12, 13, 15, 14, 8, 9, 11, 10} }
+};
+
+typedef struct {
+	bool is_covered;
+	int check_code;
+    int ones_array[4];
+} Mask4;
+
+Mask4 mask_1_x_4[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0001000100010001,
+	  .ones_array = {0, 4, 12, 8} },
+	{ .is_covered = 1,
+	  .check_code = 0b0010001000100010,
+	  .ones_array = {1, 5, 13, 9} },
+	{ .is_covered = 1,
+	  .check_code = 0b1000100010001000,
+	  .ones_array = {3, 7, 15, 11} },
+	{ .is_covered = 1,
+	  .check_code = 0b0100010001000100,
+	  .ones_array = {2, 6, 14, 10} }
+};
+
+Mask4 mask_2_x_2[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0000010100000101,
+	  .ones_array = {2, 10, 0, 8} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000001010101,
+	  .ones_array = {2, 6, 0, 4} },
+	{ .is_covered = 1,
+	  .check_code = 0b0101000001010000,
+	  .ones_array = {6, 14, 4, 12} },
+	{ .is_covered = 1,
+	  .check_code = 0b0101010100000000,
+	  .ones_array = {14, 10, 12, 8} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000001100000011,
+	  .ones_array = {8, 0, 9, 1} },
+    { .is_covered = 1,
+	  .check_code = 0b0000000000110011,
+	  .ones_array = {0, 4, 1, 5} },
+	{ .is_covered = 1,
+	  .check_code = 0b0011000000110000,
+	  .ones_array = {4, 12, 5, 13} },
+	{ .is_covered = 1,
+	  .check_code = 0b0011001100000000,
+	  .ones_array = {12, 8, 13, 9} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000101000001010,
+	  .ones_array = {9, 1, 11, 3} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000010101010,
+	  .ones_array = {1, 5, 3, 7} },
+	{ .is_covered = 1,
+	  .check_code = 0b1010000010100000,
+	  .ones_array = {5, 13, 7, 15} },
+	{ .is_covered = 1,
+	  .check_code = 0b1010101000000000,
+	  .ones_array = {13, 9, 15, 11} },
+	{ .is_covered = 1,
+	  .check_code = 0b0001100000001100,
+	  .ones_array = {11, 3, 10, 2} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000011001100,
+	  .ones_array = {3, 7, 2, 6} },
+	{ .is_covered = 1,
+	  .check_code = 0b1100000011000000,
+	  .ones_array = {7, 15, 6, 14} },
+	{ .is_covered = 1,
+	  .check_code = 0b1100110000000000,
+	  .ones_array = {15, 11, 14, 10} }
+};
+
+Mask4 mask_4_x_1[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000001111,
+	  .ones_array = {0, 1, 3, 2} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000011110000,
+	  .ones_array = {4, 5, 7, 6} },
+	{ .is_covered = 1,
+      .check_code = 0b1111000000000000,
+	  .ones_array = {12, 13, 15, 14} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000111100000000,
+	  .ones_array = {8, 9, 11, 10} }
+};
+
+typedef struct {
+	bool is_covered;
+	int check_code;
+    int ones_array[2];
+} Mask2;
+
+Mask2 mask_1_x_2[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0000000100000001,
+	  .ones_array = {8, 0} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000001000000010,
+	  .ones_array = {9, 1} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000100000001000,
+	  .ones_array = {11, 3} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000010000000100,
+	  .ones_array = {10, 2} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000010001,
+	  .ones_array = {0, 4} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000100010,
+	  .ones_array = {1, 5} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000010001000,
+	  .ones_array = {3, 7} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000001000100,
+	  .ones_array = {2, 6} },
+	{ .is_covered = 1,
+	  .check_code = 0b0001000000010000,
+	  .ones_array = {4, 12} },
+	{ .is_covered = 1,
+	  .check_code = 0b0010000000100000,
+	  .ones_array = {5, 13} },
+	{ .is_covered = 1,
+	  .check_code = 0b1000000010000000,
+	  .ones_array = {7, 15} },
+	{ .is_covered = 1,
+	  .check_code = 0b0100000001000000,
+	  .ones_array = {6, 14} },
+	{ .is_covered = 1,
+	  .check_code = 0b0001000100000000,
+	  .ones_array = {12, 8} },
+	{ .is_covered = 1,
+	  .check_code = 0b0010001000000000,
+	  .ones_array = {13, 9} },
+	{ .is_covered = 1,
+	  .check_code = 0b1000100000000000,
+	  .ones_array = {15, 11} },
+	{ .is_covered = 1,
+	  .check_code = 0b0100010000000000,
+	  .ones_array = {14, 10} }
+};
+
+Mask2 mask_2_x_1[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000000101,
+	  .ones_array = {2, 0} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000001010000,
+	  .ones_array = {6, 4} },
+	{ .is_covered = 1,
+	  .check_code = 0b0101000000000000,
+	  .ones_array = {14, 12} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000010100000000,
+	  .ones_array = {10, 8} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000000011,
+	  .ones_array = {0, 1} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000110000,
+	  .ones_array = {4, 5} },
+	{ .is_covered = 1,
+	  .check_code = 0b0011000000000000,
+	  .ones_array = {12, 13} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000001100000000,
+	  .ones_array = {8, 9} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000001010,
+	  .ones_array = {1, 3} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000010100000,
+	  .ones_array = {5, 7} },
+	{ .is_covered = 1,
+	  .check_code = 0b1010000000000000,
+	  .ones_array = {13, 15} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000101000000000,
+	  .ones_array = {9, 11} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000001100,
+	  .ones_array = {3, 2} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000011000000,
+	  .ones_array = {7, 6} },
+	{ .is_covered = 1,
+	  .check_code = 0b1100000000000000,
+	  .ones_array = {15, 14} },
+	{ .is_covered = 1,
+	  .check_code = 0b0000110000000000,
+	  .ones_array = {11, 10} }
+};
+
+typedef struct {
+	bool is_covered;
+	int check_code;
+} Mask1;
+
+Mask1 mask_1_x_1[] = {
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000000001 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000000010 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000000100 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000001000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000010000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000000100000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000001000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000010000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000000100000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000001000000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000010000000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0000100000000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0001000000000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0010000000000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b0100000000000000 },
+	{ .is_covered = 1,
+	  .check_code = 0b1000000000000000 }
+};
+
+void scan_mask_size_16(void) {
+    for (int k = 0; k < MASK16SIZE; k++)
+    	if (seq[mask_4_x_4.ones_array[k]] == 0) {	
+    		mask_4_x_4.is_covered = 0;
+    		break;
+		}
+	if (mask_4_x_4.is_covered) {
+		cal_stat(mask_4_x_4.check_code);
+		add_node(mask_4_x_4.check_code);
+	}    	
+}
+
+void scan_mask_size_8(void) {
+	for (int i = 0; i < sizeof(mask_2_x_4)/sizeof(mask_2_x_4[0]); i++)
+		for (int j = 0; j < MASK8SIZE; j++)
+    		if (seq[mask_2_x_4[i].ones_array[j]] == 0) {	
+    			mask_2_x_4[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_2_x_4)/sizeof(mask_2_x_4[0]); i++)
+		if (mask_2_x_4[i].is_covered && mask_4_x_4.is_covered)
+			mask_2_x_4[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_2_x_4)/sizeof(mask_2_x_4[0]); i++) {
+		if (mask_2_x_4[i].is_covered) {
+			cal_stat(mask_2_x_4[i].check_code);
+			add_node(mask_2_x_4[i].check_code);
+		}
 	}
-	switch (x4) {
-		case 0: --act; --bct; --cct; --dct; break;
-		case 1: --act; --bct; --cct; ++dct; break;
-		case 2: --act; --bct; ++cct; --dct; break;
-		case 3: --act; --bct; ++cct; ++dct; break;
-		case 4: --act; ++bct; --cct; --dct; break;
-		case 5: --act; ++bct; --cct; ++dct; break;
-		case 6: --act; ++bct; ++cct; --dct; break;
-		case 7: --act; ++bct; ++cct; ++dct; break;
-		case 8: ++act; --bct; --cct; --dct; break;
-		case 9: ++act; --bct; --cct; ++dct; break;
-		case 10: ++act; --bct; ++cct; --dct; break;
-		case 11: ++act; --bct; ++cct; ++dct; break;
-		case 12: ++act; ++bct; --cct; --dct; break;
-		case 13: ++act; ++bct; --cct; ++dct; break;
-		case 14: ++act; ++bct; ++cct; --dct; break;
-		case 15: ++act; ++bct; ++cct; ++dct; break;
-		default: break;
+	
+	
+	for (int i = 0; i < sizeof(mask_4_x_2)/sizeof(mask_4_x_2[0]); i++)
+		for (int j = 0; j < MASK8SIZE; j++)
+    		if (seq[mask_4_x_2[i].ones_array[j]] == 0) {	
+    			mask_4_x_2[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_4_x_2)/sizeof(mask_4_x_2[0]); i++)
+		if (mask_4_x_2[i].is_covered && mask_4_x_4.is_covered)
+			mask_4_x_2[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_4_x_2)/sizeof(mask_4_x_2[0]); i++) {
+		if (mask_4_x_2[i].is_covered) {
+			cal_stat(mask_4_x_2[i].check_code);
+			add_node(mask_4_x_2[i].check_code);
+		}
 	}
-	if (x1 == 0) printf("simplification of group 0 -> ");
-	else if (x1 == 1 || x1 == 2 || x1 == 8) printf("simplification of group 1 -> ");
-	else if (x1 == 7 || x1 == 11 || x1 == 13 || x1 == 14) printf("simplification of group 3 -> ");
-	else if (x1 == 15) printf("simplification of group 4 -> ");
-	else printf("simplification of group 2 -> ");
-	if (act == 4) printf("a");
-	else if (act == -4) printf("a'");
-	if (bct == 4) printf("b");
-	else if (bct == -4) printf("b'");
-	if (cct == 4) printf("c");
-	else if (cct == -4) printf("c'");
-	if (dct == 4) printf("d");
-	else if (dct == -4) printf("d'");
-	printf("\n");
+}
+
+void scan_mask_size_4(struct ListNode *og_node) {
+	for (int i = 0; i < sizeof(mask_1_x_4)/sizeof(mask_1_x_4[0]); i++)
+		for (int j = 0; j < MASK4SIZE; j++)
+    		if (seq[mask_1_x_4[i].ones_array[j]] == 0) {	
+    			mask_1_x_4[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_1_x_4)/sizeof(mask_1_x_4[0]); i++)
+		if (mask_1_x_4[i].is_covered && covered_node_check(og_node, mask_1_x_4[i].check_code))
+				mask_1_x_4[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_1_x_4)/sizeof(mask_1_x_4[0]); i++) {
+		if (mask_1_x_4[i].is_covered) {
+			cal_stat(mask_1_x_4[i].check_code);
+			add_node(mask_1_x_4[i].check_code);
+		}
+	}	
+	
+	
+	for (int i = 0; i < sizeof(mask_2_x_2)/sizeof(mask_2_x_2[0]); i++)
+		for (int j = 0; j < MASK4SIZE; j++)
+    		if (seq[mask_2_x_2[i].ones_array[j]] == 0) {	
+    			mask_2_x_2[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_2_x_2)/sizeof(mask_2_x_2[0]); i++)
+			if (mask_2_x_2[i].is_covered && covered_node_check(og_node, mask_2_x_2[i].check_code))
+					mask_2_x_2[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_2_x_2)/sizeof(mask_2_x_2[0]); i++) {
+		if (mask_2_x_2[i].is_covered) {
+			cal_stat(mask_2_x_2[i].check_code);
+			add_node(mask_2_x_2[i].check_code);
+		}
+	}
+	
+	
+	for (int i = 0; i < sizeof(mask_4_x_1)/sizeof(mask_4_x_1[0]); i++)
+		for (int j = 0; j < MASK4SIZE; j++)
+    		if (seq[mask_4_x_1[i].ones_array[j]] == 0) {	
+    			mask_4_x_1[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_4_x_1)/sizeof(mask_4_x_1[0]); i++)
+			if (mask_4_x_1[i].is_covered && covered_node_check(og_node, mask_4_x_1[i].check_code))
+					mask_4_x_1[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_4_x_1)/sizeof(mask_4_x_1[0]); i++) {
+		if (mask_4_x_1[i].is_covered) {
+			cal_stat(mask_4_x_1[i].check_code);
+			add_node(mask_4_x_1[i].check_code);
+		}
+	}
+}
+
+void scan_mask_size_2(struct ListNode *og_node) {
+	for (int i = 0; i < sizeof(mask_1_x_2)/sizeof(mask_1_x_2[0]); i++)
+		for (int j = 0; j < MASK2SIZE; j++)
+    		if (seq[mask_1_x_2[i].ones_array[j]] == 0) {	
+    			mask_1_x_2[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_1_x_2)/sizeof(mask_1_x_2[0]); i++)
+			if (mask_1_x_2[i].is_covered && covered_node_check(og_node, mask_1_x_2[i].check_code))
+					mask_1_x_2[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_1_x_2)/sizeof(mask_1_x_2[0]); i++) {
+		if (mask_1_x_2[i].is_covered) {
+			cal_stat(mask_1_x_2[i].check_code);
+			add_node(mask_1_x_2[i].check_code);
+		}
+	}
+	
+	
+	for (int i = 0; i < sizeof(mask_2_x_1)/sizeof(mask_2_x_1[0]); i++)
+		for (int j = 0; j < MASK2SIZE; j++)
+    		if (seq[mask_2_x_1[i].ones_array[j]] == 0) {	
+    			mask_2_x_1[i].is_covered = 0;
+    			break;
+			}
+	for (int i = 0; i < sizeof(mask_2_x_1)/sizeof(mask_2_x_1[0]); i++)
+		for (int j = 0; j < sizeof(mask_4_x_1)/sizeof(mask_4_x_1[0]); j++)
+			if (mask_2_x_1[i].is_covered && covered_node_check(og_node, mask_2_x_1[i].check_code))
+					mask_2_x_1[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_2_x_1)/sizeof(mask_2_x_1[0]); i++) {
+		if (mask_2_x_1[i].is_covered) {
+			cal_stat(mask_2_x_1[i].check_code);
+			add_node(mask_2_x_1[i].check_code);
+		}
+	}
+}
+
+void scan_mask_size_1(struct ListNode *og_node) {
+	for (int i = 0; i < sizeof(mask_1_x_1)/sizeof(mask_1_x_1[0]); i++)
+    	if (seq[i] == 0)	
+    		mask_1_x_1[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_1_x_1)/sizeof(mask_1_x_1[0]); i++)
+		for (int j = 0; j < sizeof(mask_1_x_2)/sizeof(mask_1_x_2[0]); j++)
+			if (mask_1_x_1[i].is_covered && covered_node_check(og_node, mask_1_x_1[i].check_code))
+					mask_1_x_1[i].is_covered = 0;
+	for (int i = 0; i < sizeof(mask_1_x_1)/sizeof(mask_1_x_1[0]); i++) {
+		if (mask_1_x_1[i].is_covered) {
+			cal_stat(mask_1_x_1[i].check_code);
+			add_node(mask_1_x_1[i].check_code);
+		}
+	}
 }
 
 int main()
@@ -314,6 +613,7 @@ int main()
     {
         int flag_row = 0;
         int flag_col = 0;
+        
         int table_a[2];
         int table_b[2];
         table_a[0] = table_a[1] = table_b[0] = table_b[1] = 0;
@@ -353,6 +653,7 @@ int main()
             flag_row = 7;
         else if (table_a[1] == 1 && table_b[1] == 1) //case a'b'
             flag_row = 8;
+        
         table_a[0] = table_a[1] = table_b[0] = table_b[1] = 0;
         for (int j = 0; split[i][j] != '\0'; j++)
         {
@@ -499,168 +800,54 @@ int main()
         if (k < 3) cout << "------+----+----+----+----|" << endl;
         else cout << "---------------------------" << endl << endl;
     }
+    
+    seq[0] = map[0][0];
+    seq[1] = map[1][0];
+    seq[2] = map[3][0];
+    seq[3] = map[2][0];
+    seq[4] = map[0][1];
+    seq[5] = map[1][1];
+    seq[6] = map[3][1];
+    seq[7] = map[2][1];
+    seq[8] = map[0][3];
+    seq[9] = map[1][3];
+    seq[10] = map[3][3];
+    seq[11] = map[2][3];
+    seq[12] = map[0][2];
+    seq[13] = map[1][2];
+    seq[14] = map[3][2];
+    seq[15] = map[2][2];
+    
+    struct ListNode *og_node = (struct ListNode*) malloc(sizeof(struct ListNode));
+	og_node->check_code = 0;
+	og_node->next = NULL;
+	temp_node = og_node;
+	
+	scan_mask_size_16();
+	scan_mask_size_8();
+	scan_mask_size_4(og_node);
+	scan_mask_size_2(og_node);
+	scan_mask_size_1(og_node);
+	
+	int stat_min = KMAP_SIZE;
+	int target_num = KMAP_SIZE;
+	
+	cout << "Minimum SOP Form: " << endl;
+	
+	while (!find_min_SOP_over(stat)) {
+		for (int k = 0; k < KMAP_SIZE; k++)
+			if (stat[k] < stat_min && stat[k]) {
+				stat_min = stat[k];
+				target_num = k;
+			}
+		//cout << traverse_node(og_node, target_num) << endl;
+		print_min_SOP(traverse_node(og_node, target_num));
+		clear_stat(traverse_node(og_node, target_num));
+		stat_min = KMAP_SIZE;
+	}
 
-    int index[4][4] = {{0, 4, 12, 8},
-                       {1, 5, 13, 9},
-                       {3, 7, 15, 11},
-                       {2, 6, 14, 10}};
-    int count[4][4];
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            count[i][j] = 0;
-    
-    int *map10 = (int*) malloc(sizeof(int) * 16);
-    map10[0] = map[0][0];
-    map10[1] = map[1][0];
-    map10[2] = map[3][0];
-    map10[3] = map[2][0];
-    map10[4] = map[0][1];
-    map10[5] = map[1][1];
-    map10[6] = map[3][1];
-    map10[7] = map[2][1];
-    map10[8] = map[0][3];
-    map10[9] = map[1][3];
-    map10[10] = map[3][3];
-    map10[11] = map[2][3];
-    map10[12] = map[0][2];
-    map10[13] = map[1][2];
-    map10[14] = map[3][2];
-    map10[15] = map[2][2];
-    
-    //Find 1's
-    int ct1 = 0;
-	for (int i = 0; i < 16; ++i) if (map10[i] == 1) ++ct1;
-	int *one = (int*) malloc(sizeof(int) * ct1);
-	int j = 0;
-	for (int i = 0; i < 16; ++i) {
-		if (map10[i] == 1) { one[j] = i; ++j; }
-	}
-	
-	//Forming column 2 using bitwise
-	int ct2 = 0;
-	for (int i = 0; i < ct1-1; ++i) {
-		for (int j = i+1; j < ct1; ++j) {
-			if ((one[i] ^ one[j]) == 1 || (one[i] ^ one[j]) == 2 || (one[i] ^ one[j]) == 4 || (one[i] ^ one[j]) == 8) ++ct2;
-		}
-	}
-	int four[ct2][2]; int k = 0;
-	for (int i = 0; i < ct1-1; ++i) {
-		for (int j = i+1; j < ct1; ++j) {
-			if ((one[i] ^ one[j]) == 1 || (one[i] ^ one[j]) == 2 || (one[i] ^ one[j]) == 4 || (one[i] ^ one[j]) == 8) {
-				four[k][0] = one[i]; four[k][1] = one[j]; ++k;
-			}
-		}
-	}
-	
-	//Forming column 3
-	int ct3 = 0;
-	for (int i = 0; i < ct2-1; ++i) {
-		for (int j = i+1; j < ct2; ++j) {
-			if (four[i][0] == four[j][0]) continue;
-			bool p = 1;
-			int cln3 = v2(t2o(four[i][0],four[i][1]), t2o(four[j][0],four[j][1]));
-			for (int k = 0; k < 4; ++k) {
-				if (cln3 % 10 == 3) p = 0;
-				cln3 /= 10;
-			}
-			if ((four[i][0] > four[i][1]) || four[i][1] > four[j][0] || four[j][0] > four[j][1] || four[i][0] > four[j][1]) p = 0;
-			if (p == 1) ct3 += 4;
-		}
-	}
-	int *two = (int*) malloc(sizeof(int) * ct3);
-	int x = 0;
-	for (int i = 0; i < ct2-1; ++i) {
-		for (int j = i+1; j < ct2; ++j) {
-			if (four[i][0] == four[j][0]) continue;
-			bool p = 1;
-			int cln3 = v2(t2o(four[i][0],four[i][1]), t2o(four[j][0],four[j][1]));
-			for (int k = 0; k < 4; ++k) {
-				if (cln3 % 10 == 3) p = 0;
-				cln3 /= 10;
-			}
-			if ((four[i][0] > four[i][1]) || four[i][1] > four[j][0] || four[j][0] > four[j][1] || four[i][0] > four[j][1]) p = 0;
-			if (p == 1) { two[x] = four[i][0]; two[x+1] = four[i][1]; two[x+2] = four[j][0]; two[x+3] = four[j][1]; x+=4; }
-		}
-	}
-	
-	//Elimiate repeated terms
-	int four_cp[ct2][2], ct4 = 0;
-	for (int i = 0; i < ct2; ++i) { four_cp[i][0] = four[i][0]; four_cp[i][1] = four[i][1]; }
-	for (int i = 0; i < ct2; ++i)
-		for (int j = 0; j < ct3; j+=4) {
-			if (four_cp[i][0] == two[j] || four_cp[i][0] == two[j+1] || four_cp[i][0] == two[j+2] || four_cp[i][0] == two[j+3]) ++ct4;
-			if (four_cp[i][1] == two[j] || four_cp[i][1] == two[j+1] || four_cp[i][1] == two[j+2] || four_cp[i][1] == two[j+3]) ++ct4;
-			if (ct4 >= 2) { four_cp[i][0] = -100; four_cp[i][1] = -100; }
-			ct4 = 0;
-		}
-	
-	//Print column 2 & column 3
-	for (int i = 0; i < ct2; ++i) if (four_cp[i][0] > 0 && four_cp[i][1] > 0) printf("[%d, %d]\n", four_cp[i][0], four_cp[i][1]);
-	for (int i = 0; i < ct3; i+=4) printf("[%d, %d, %d, %d]\n", two[i], two[i+1], two[i+2], two[i+3]);
-	
-	//Compute times of index, to form prime implicants chart
-	int *bar = (int*) calloc(16, sizeof(int));
-	for (int i = 0; i < ct2; ++i) {
-		for (int j = 0; j < 16; ++j) {
-			if (four_cp[i][0] == j)	++bar[j];
-			if (four_cp[i][1] == j) ++bar[j];
-		}
-	}
-	
-	//Find essential terms
-	for (int i = 0; i < ct3; ++i) for (int j = 0; j < 16; ++j) if (two[i] == j) ++bar[j];
-	int ct5 = 0;
-	for (int i = 0; i < 16; ++i) if (bar[i] == 1) ++ct5;
-	int *single = (int*) malloc(sizeof(int) * ct5);
-	j = 0;
-	for (int i = 0; i < 16; ++i) {
-		if (j == ct5) break;
-		if (bar[i] == 1) { single[j] = i; ++j; }
-	}
-	
-	//Print essential prime implicants
-	printf("\n");
-	for (int i = 0; i < ct5; ++i) {
-		for (int j = 0; j < ct2; ++j) {
-			if (four_cp[i][0] == single[i] || four_cp[i][1] == single[i]) op2(four_cp[i][0], four_cp[i][1]);
-			bar[four_cp[i][0]] = -100; bar[four_cp[i][1]] = -100;
-		}
-		for (int j = 0; j < ct3; j+=4) {
-			if (two[j] == single[i] || two[j+1] == single[i] || two[j+2] == single[i] || two[j+3] == single[i]) op4(two[j], two[j+1], two[j+2], two[j+3]);
-			bar[two[j]] = -100; bar[two[j+1]] = -100; bar[two[j+2]] = -100; bar[two[j+3]] = -100; 
-		}
-	}
-	
-	//Print remaining essential prime implicants
-	int ct6 = 0;
-	for (int i = 0; i < 16; ++i) if (bar[i] > 0) ++ct6;
-	int *rn = (int*) malloc(sizeof(int) * ct6);
-	j = 0;
-	for (int i = 0; i < 16; ++i) {
-		if (j == ct6) break;
-		if (bar[i] > 0) { rn[j] = i; ++j; }
-	}
-	int ed = ct6, mc = 0; bool pn = 1;
-	while (ed > 0) {
-		for (int i = 0; i < ct2; ++i) {
-			if (pn == 0) break;
-			for (int j = 0; j < ct6; ++j) {
-				if (pn == 0) break;
-				if (four_cp[i][0] == rn[j]) ++mc;
-				if (four_cp[i][1] == rn[j]) ++mc;
-				if (mc == ct6) { op2(four_cp[i][0], four_cp[i][1]); pn = 0; }
-				else if (mc == ed && pn == 1) {
-					op2(four_cp[i][0], four_cp[i][1]);
-					for (int k = 0; k < ct6; ++k) {
-						if (four_cp[i][0] == rn[k]) rn[k] = -100;
-						if (four_cp[i][1] == rn[k]) rn[k] = -100;
-					}
-				}
-			}
-			mc = 0; 
-		}
-		--ed;
-	}	
+
+
 	return 0;
 }
 
