@@ -1,6 +1,8 @@
 # KMapProgramming
 This is a C/C++ program to read in a Boolean equation, making the corresponding 4x4 Karnaugh Map and computing the minimum form of sum of product.
 
+![image](https://user-images.githubusercontent.com/76551322/135667688-34066d2e-cb52-4dce-a72d-77506a09dc6e.png)
+
 # Mask Operation
 This program scans the Karnaugh Map to get all-ones matrix using different sizes of masks.
 
