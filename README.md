@@ -37,7 +37,7 @@ After finding all the desired masks(whose is_coverd == true), we implement an al
 
 First, choose the term with **the least indices** as essential part, from 1 index to 16 indices by ascent order.
 
-That is, b'c'(index 9) and cd'(index 14) in the picture below, for instance.
+That is, b'c'(index 9) and cd'(index 14) are chosen in the picture below, for instance.
 
 ![image](https://user-images.githubusercontent.com/76551322/135664044-4112cc78-7f38-4fbb-abfe-fdeded7c3f28.png)
 
