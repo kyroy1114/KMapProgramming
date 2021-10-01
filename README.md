@@ -1,5 +1,5 @@
 # KMapProgramming
-This is a C/C++ program to read in a Boolean equation, making the corresponding Karnaugh Map and computing the minimum form of sum of product.
+This is a C/C++ program to read in a Boolean equation, making the corresponding 4x4 Karnaugh Map and computing the minimum form of sum of product.
 
 # Mask Operation
 This program scans the Karnaugh Map to get all-ones matrix using different sizes of masks.
@@ -27,6 +27,27 @@ Smaller Mask:  MaskB = [0, 4, 12, 8], with checkcode_B = 0b0001000100010001
 checkcode_A AND checkcode_B = 0b0011001100110011 & 0b0001000100010001 = 0b0001000100010001 = checkcode_B(Smaller Mask)
 
 If the result of the AND operaton is equal to the checkcode of the smaller mask, then we can find out that it is included in the bigger mask.
+
+# Minimum Form of Sum of Product
+To compute the minimum form of sum of product, the program should pick out the essential part of Boolean equation.
+
+After finding all the desired masks(whose is_coverd == true), we implement an algorithm to choose essential nodes in the linked list.
+
+First, choose the term with **the least indices** as essential part, from 1 index to 16 indices by ascent order.
+
+That is, b'c'(index 9) and cd'(index 14) in the picture below, for instance.
+
+![image](https://user-images.githubusercontent.com/76551322/135664044-4112cc78-7f38-4fbb-abfe-fdeded7c3f28.png)
+
+Then the program will go through the licked list to choose the term with corresponding index.
+
+In addition, the chosen term must contain **the most indices**.
+
+Once a term is choosed, the number of the index included in the term will be clear. The number of indices stored in array **stat[16]**.
+
+![image](https://user-images.githubusercontent.com/76551322/135666215-4cbbebdf-f826-4368-a43e-592269b93c08.png)
+
+Repeat the process above until numbers of all indices are cleared(all elements in array stat[16] become 0).
 
 # Remark
 **The program is taking the test and needs to optimizing. Hence, remark this is not the final version.
