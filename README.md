@@ -12,8 +12,7 @@ The program uses a boolean variable called **is_coverd** to represent whether a 
 
 If finding an all-ones matrix by the mask, storing the **checkcode** of the mask into a **linked list**.
 
-Checkcode is a struct member to check whether the mask is included in bigger one.
-Checkcode is a 16-bit value of an integer to represent the ones indices of the mask by its bit value.
+Checkcode is a struct member to check whether the mask is included in bigger one, which is a 16-bit value of an integer to represent the ones indices of the mask by its bit value.
 
 Once an all-ones matrix is coverd by a mask, the program will traverse the checkcode of all nodes in the linked list.
 
