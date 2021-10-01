@@ -22,9 +22,9 @@ By **bitwise AND operaton** between two sets of checkcode, we can examine if the
 
 For example,
 
-Bigger Mask: MaskA = [0, 4, 12, 8, 1, 5, 13, 9], with checkcode_A = 0b0011001100110011
+Bigger Mask: MaskA = {0, 4, 12, 8, 1, 5, 13, 9}, with checkcode_A = 0b0011001100110011
 
-Smaller Mask:  MaskB = [0, 4, 12, 8], with checkcode_B = 0b0001000100010001
+Smaller Mask:  MaskB = {0, 4, 12, 8}, with checkcode_B = 0b0001000100010001
 
 checkcode_A AND checkcode_B = 0b0011001100110011 & 0b0001000100010001 = 0b0001000100010001 = checkcode_B(Smaller Mask)
 
