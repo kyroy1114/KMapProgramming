@@ -8,7 +8,7 @@ Mask scanning started from the max-sized mask **by descent order**.
 
 That is to say, scanning from Mask16(4x4) -> Mask8(2x4, 4x2) -> Mask4(1x4, 2x2, 4x1) -> Mask2(1x2, 2x1) -> Mask1(1x1).
 
-The program uses a boolean variable called **is_coverd** to represent whether a mask covering an all-ones matrix.
+The program uses a boolean variable called **is_coverd** to indicate whether a mask covering an all-ones matrix.
 
 If finding an all-ones matrix by the mask, storing the **checkcode** of the mask into a **linked list**.
 
